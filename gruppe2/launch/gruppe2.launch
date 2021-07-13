@@ -1,0 +1,4 @@
+<launch>
+  <node name="cat" type="minimax.py" pkg="gruppe2" args="/cat/cmd_vel False /cat/odom /cat/scan /mouse/cmd_vel /mouse/odom"  output="screen"/>
+  <!-- <node name="mouse" type="minimax.py" pkg="gruppe2" args="/mouse/cmd_vel True /mouse/odom /mouse/scan /cat/cmd_vel /mouse/perception_of_cat"  output="screen"/> -->
+</launch>

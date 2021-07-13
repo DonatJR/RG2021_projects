@@ -78,7 +78,7 @@
   <node name="refree" type="refree.py" pkg="catch"  />
 
 
-  <!-- <include file="$(find group_x)/launch/team_cat.launch"/> -->
+  <include file="$(find gruppe2)/launch/gruppe2.launch"/>
   
   <!-- <include file="$(find group_y)/launch/team_mouse.launch"/> -->
 

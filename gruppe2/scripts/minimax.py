@@ -8,19 +8,16 @@ from numpy.lib.function_base import angle
 import rospy
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
+from std_msgs.msg import Int32
+from sensor_msgs.msg import LaserScan
 from tf.transformations import euler_from_quaternion
 import timeit
 import numpy as np
 import matplotlib.pyplot as plt
 
-assert len(sys.argv) >= 6
+from rogata_library import rogata_helper 
 
-############################################################
-# We have a bug where sometimes the behaviour of both bots
-# seems to be like intended, but other times they just
-# move around almost randomly, which is why we could not
-# complete the last task (testing different positions)
-############################################################
+assert len(sys.argv) >= 6
 
 # ===== CLASSES =====
 
@@ -36,24 +33,56 @@ class AnimalProperties:
 animal_properties = { AnimalType.MOUSE: AnimalProperties(linear_vel = 0.18, max_omega = 0.8), AnimalType.CAT: AnimalProperties(linear_vel = 0.22, max_omega = 2.84) }
 
 class AnimalBehaviour:
-    def __init__(self, animal_type, self_cmd_vel_topic, self_odom_topic, enemy_cmd_vel_topic, enemy_odom_topic) -> None:
+    def __init__(self, animal_type, self_cmd_vel_topic, self_odom_topic, self_scan, enemy_odom_topic) -> None:
+
+        # TODO: weiß nicht, ob wir das brauchen
+        # rospy.Subscriber("game_state", Int32, lambda game_state: self.__game_state_callback(game_state))
+
+        # TODO: Cheese. Warum bekomme ich hier nur ein Punkt zurück. Hat doch mehrere? Vermutlich deswegen? The center in this case refers to the mean position of the object. For a disjointed area this center can be outside of the object itself.
+        self.Helper = rogata_helper() 
+        self.cheese_pos = self.Helper.get_pos('cheese_obj')
+
+        # Velocities
+        self.__init_velocities(animal_type)
+
+        # Types
         self.type = animal_type
         self.enemy_type = AnimalType.MOUSE if self.type == AnimalType.CAT else AnimalType.CAT
+
+        # Properties
         self.properties = animal_properties[self.type]
         self.enemy_properties = animal_properties[self.enemy_type]
 
+        # Topics
         rospy.Subscriber(self_odom_topic, Odometry, lambda odom: self.__odom_callback(odom, True))
         rospy.Subscriber(enemy_odom_topic, Odometry, lambda odom: self.__odom_callback(odom, False))
-
-        # cmd_vel_callback = functools.partial(self.__cmd_vel_callback, self)
-        # rospy.Subscriber(self_cmd_vel_topic, Twist, lambda cmd_vel: cmd_vel_callback(cmd_vel, True))
-        # rospy.Subscriber(enemy_cmd_vel_topic, Twist, lambda cmd_vel: cmd_vel_callback(cmd_vel, False))
+        rospy.Subscriber(self_scan, LaserScan, self.__scan_callback)
 
         self.cmd_vel_pub = rospy.Publisher(self_cmd_vel_topic, Twist, queue_size=10)
 
         self.strategy_choices = np.linspace(-self.properties.max_omega, self.properties.max_omega, 8)
         self.self_odom_callback_received = False
         self.enemy_odom_callback_received = False
+
+    def __scan_callback(self, msg):
+        ranges = msg.ranges
+        ranges = np.array(ranges)
+
+    def __init_velocities(self, animal_type):
+        if animal_type == AnimalType.MOUSE:
+            eta = np.random.uniform(0, 0.2)
+            xi = np.random.uniform(0, 1.2)
+            self.min_vel = 0.2
+            self.max_vel = 0.2 + eta
+            self.min_ang_vel = -0.8 - xi
+            self.may_ang_vel = 0.8 + xi
+        else:
+            zeta = np.random.uniform(0, 0.4)
+            eps = np.random.uniform(-0.4, 0.4)
+            self.min_vel = 0.18
+            self.max_vel = 0.18 + zeta
+            self.min_ang_vel = -2 - eps
+            self.may_ang_vel = 2 + eps
 
     def __odom_callback(self, odom: Odometry, self_odom: bool):
         orientation = euler_from_quaternion([odom.pose.pose.orientation.x,
@@ -72,13 +101,8 @@ class AnimalBehaviour:
             self.enemy_y = odom.pose.pose.position.y
             self.enemy_odom_callback_received = True
 
-    # def __cmd_vel_callback(self, twist: Twist, self_cmd_vel: bool):
-    #     if self_cmd_vel:
-    #         self.cmd_vel = twist.linear.x
-    #         self.omega = twist.angular.z
-    #     else:
-    #         self.enemy_cmd_vel = twist.linear.x
-    #         self.enemy_omega = twist.angular.z
+    def __game_state_callback(self, game_state: Int32):
+        pass
 
     def __system_update(self, angular_vel: float, current_state, animal_type: AnimalType):
         if animal_type == AnimalType.MOUSE:
@@ -127,11 +151,7 @@ class AnimalBehaviour:
             distance_weight = 0.9
             angle_weight = 0.1
 
-        
         distance = np.sqrt((mouse_x - cat_x) ** 2 + (mouse_y - cat_y) ** 2)
-        
-        # if self.type == AnimalType.MOUSE:
-        #     print(f"distance: {distance}, angle: {angle} ({np.abs(180 - angle)}), d_weight: {distance_weight}, angle_weight: {angle_weight}")
 
         # emphasize distance and a good angle and weight it based on the fact if mouse is behind or in front of cat
         return distance_weight * distance + angle_weight * np.abs(180 - angle)
@@ -217,22 +237,21 @@ class AnimalBehaviour:
 
 # ===== SCRIPT =====
 if __name__ == '__main__':
-
     self_cmd_vel_topic = sys.argv[1]
     is_mouse = sys.argv[2] == 'True'
     animal_type = AnimalType.MOUSE if is_mouse else AnimalType.CAT
     self_odom_topic = sys.argv[3]
-    enemy_cmd_vel_topic = sys.argv[4]
-    enemy_odom_topic = sys.argv[5]
+    self_scan = sys.argv[4]
+    # Ich denke das dürfen wir nicht nutzen
+    # enemy_cmd_vel_topic = sys.argv[5]
+    enemy_odom_topic = sys.argv[6]
 
     try:
         if animal_type == AnimalType.MOUSE:
             rospy.init_node('mouse')
         else:
             rospy.init_node('cat')
-        animal = AnimalBehaviour(animal_type, self_cmd_vel_topic, self_odom_topic, enemy_cmd_vel_topic, enemy_odom_topic)
-        # if animal_type == AnimalType.MOUSE:
-        #     animal.measure_minimax()
+        animal = AnimalBehaviour(animal_type, self_cmd_vel_topic, self_odom_topic, self_scan, enemy_odom_topic)
         animal.start()
     except rospy.ROSInterruptException:
         pass
