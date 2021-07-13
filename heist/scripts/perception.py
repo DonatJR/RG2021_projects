@@ -11,8 +11,8 @@ class Perception:
     def __init__(self):
         self.source_topic = sys.argv[1]
         self.published_topic = sys.argv[2]
-        self.position_noise = float(sys.argv[3]) ** 2
-        self.velocity_noise = float(sys.argv[4]) ** 2
+        self.position_noise = float(sys.argv[3]) 
+        self.velocity_noise = float(sys.argv[4]) 
 
         rate = rospy.Rate(0.5)  # 0.5hz
         rospy.Subscriber(self.source_topic, Odometry, self.source_callback)
@@ -24,10 +24,10 @@ class Perception:
 
     def source_callback(self, odom):
         percepted_odom = odom # Odometry()
-        percepted_odom.pose.pose.position.x += self.position_noise * np.random.randn()
-        percepted_odom.pose.pose.position.y += self.position_noise * np.random.randn()
-        percepted_odom.twist.twist.linear.x += self.velocity_noise * np.random.randn()
-        percepted_odom.twist.twist.angular.z += self.velocity_noise * np.random.randn()
+        percepted_odom.pose.pose.position.x += np.random.normal(0, self.position_noise)
+        percepted_odom.pose.pose.position.y += np.random.normal(0, self.position_noise) 
+        percepted_odom.twist.twist.linear.x += np.random.normal(0, self.velocity_noise) 
+        percepted_odom.twist.twist.angular.z += np.random.normal(0, self.velocity_noise) 
         self.pub.publish(percepted_odom)
 
 
