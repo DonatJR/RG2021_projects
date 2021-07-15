@@ -2,6 +2,7 @@
 
 from gruppe2.scripts.types import AnimalPosAndOrientation
 import sys
+import os
 
 from behaviours import get_all_behaviours
 from types import AnimalProperties
@@ -10,6 +11,8 @@ import rospy
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
+import rospkg
+
 from tf.transformations import euler_from_quaternion
 import numpy as np
 
@@ -25,8 +28,8 @@ class Cat:
         # rospy.Subscriber("game_state", Int32, lambda game_state: self.__game_state_callback(game_state))
 
         # TODO: Cheese. Warum bekomme ich hier nur ein Punkt zurück. Hat doch mehrere? Vermutlich deswegen? The center in this case refers to the mean position of the object. For a disjointed area this center can be outside of the object itself.
-        self.rogata_helper = rogata_helper() 
-        self.cheese_pos = self.rogata_helper.get_pos('cheese_obj')
+        self.cheese_pos = self.__get_cheese_pos()
+        print(self.cheese_pos)
 
         # Properties
         self.__init_properties()
@@ -42,6 +45,16 @@ class Cat:
 
         self.self_odom_callback_received = False
         self.enemy_odom_callback_received = False
+
+    def __get_cheese_pos(self):
+        rospack    = rospkg.RosPack()
+        catch_path = rospack.get_path('catch')
+        cheese_positions = []
+        for i in [1,2,3,4]:
+            filepath   = os.path.join(catch_path, 'maps/cheese_'+str(i)+'.npy')
+            cheese     = np.load(filepath)    
+            cheese_positions.append(np.mean(cheese, axis=0)[0])
+        return cheese_positions
 
     def __scan_callback(self, msg):
         ranges = msg.ranges
