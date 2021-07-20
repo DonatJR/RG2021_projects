@@ -274,3 +274,7 @@ TSWLatexianTemp*
 
 # Makeindex log files
 *.lpz
+
+RoGaTa-Engine/
+__pycache__/
+.vscode/
