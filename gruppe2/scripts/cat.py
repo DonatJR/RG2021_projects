@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-from gruppe2.scripts.types import AnimalPosAndOrientation
+from animal_types import AnimalPosAndOrientation
 import sys
 import os
 
 from behaviours import get_all_behaviours
-from types import AnimalProperties
+from animal_types import AnimalProperties
 
 import rospy
 from nav_msgs.msg import Odometry

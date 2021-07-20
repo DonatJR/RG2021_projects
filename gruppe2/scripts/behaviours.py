@@ -1,4 +1,5 @@
-from gruppe2.scripts.types import AnimalPosAndOrientation, AnimalProperties, Positition2D
+from numpy.lib.function_base import angle
+from animal_types import AnimalPosAndOrientation, AnimalProperties, Positition2D
 import inspect
 import numpy as np
 
@@ -67,7 +68,7 @@ class MinimaxBehaviour(AbstractBehaviour):
         new_y = own_pos.pos.y
         new_orientation = own_pos.orientation
 
-        speed = self.animal_properties.linear_vel
+        speed = self.animal_properties.max_linear_vel
         iterations = 10
         dt = 1.0 / iterations
 
