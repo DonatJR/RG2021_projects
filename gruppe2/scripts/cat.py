@@ -27,9 +27,8 @@ class Cat:
         # TODO: weiß nicht, ob wir das brauchen
         # rospy.Subscriber("game_state", Int32, lambda game_state: self.__game_state_callback(game_state))
 
-        # TODO: Cheese. Warum bekomme ich hier nur ein Punkt zurück. Hat doch mehrere? Vermutlich deswegen? The center in this case refers to the mean position of the object. For a disjointed area this center can be outside of the object itself.
+        # Cheese
         self.cheese_pos = self.__get_cheese_pos()
-        print(self.cheese_pos)
 
         # Properties
         self.__init_properties()
@@ -56,10 +55,17 @@ class Cat:
             cheese_positions.append(np.mean(cheese, axis=0)[0])
         return cheese_positions
 
-    def __scan_callback(self, msg):
-        ranges = msg.ranges
+    def __scan_callback(self, scan_msg):
+        ranges = scan_msg.ranges
         ranges = np.array(ranges)
-        # TODO: why are we not doing anything with these?
+        angle_min = scan_msg.angle_min  # start angle of the scan [rad]
+        angle_max = scan_msg.angle_max  # end angle of the scan [rad]
+        angle_increment = scan_msg.angle_increment  # angular distance between measurements [rad]
+        angles = np.arange(angle_min, angle_max + angle_increment, angle_increment)
+
+        angles = angles[np.isfinite(ranges)]  # delete 'inf'
+        ranges = ranges[np.isfinite(ranges)]
+        self.scan = (ranges, angles)
 
     def __init_properties(self):
         random_velocity_factor = np.random.uniform(0, 0.2)
@@ -84,8 +90,7 @@ class Cat:
             # we cannot calculate anything without having received our and the enemy position
             if not self.self_odom_callback_received or not self.enemy_odom_callback_received:
                 continue
-            
-            velocity, angle = self.behavior.get_velocity_and_omega(self.self_pos, self.enemy_pos)
+            velocity, angle = self.behavior.get_velocity_and_omega(self.self_pos, self.enemy_pos, self.scan)
 
             out = Twist()
             out.linear.x = velocity

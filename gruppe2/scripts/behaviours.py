@@ -4,7 +4,7 @@ import inspect
 import numpy as np
 
 class AbstractBehaviour():
-    def get_velocity_and_omega(self, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation):
+    def get_velocity_and_omega(self, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation,  scan: tuple):
         raise NotImplementedError(f'{inspect.stack()[0][3]} is not implemented, do not use abstract behaviour class directly')
 
 class MinimaxBehaviour(AbstractBehaviour):
@@ -14,7 +14,7 @@ class MinimaxBehaviour(AbstractBehaviour):
         # TODO: how many choices do we want?
         self.strategy_choices = np.linspace(-self.animal_properties.max_omega, self.animal_properties.max_omega, 8)
 
-    def get_velocity_and_omega(self, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation):
+    def get_velocity_and_omega(self, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation, scan: tuple):
         # TODO: which depth do we want?
         all_move_values = [self.__minimax(choice, own_pos, other_pos, depth = 3) for choice in self.strategy_choices]
 
@@ -79,7 +79,36 @@ class MinimaxBehaviour(AbstractBehaviour):
 
         return AnimalPosAndOrientation(new_x, new_y, new_orientation)
 
+class CollisionAvoidanceBehaviour(AbstractBehaviour):
+    def __init__(self, animal_properties: AnimalProperties):
+        self.animal_properties = animal_properties
+
+    def get_velocity_and_omega(self, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation, scan: tuple):
+        ranges = scan[0]
+        angles = scan[1]
+        return self.animal_properties.max_linear_vel, self.__collision_avoidance(ranges, angles)        
+
+    def __collision_avoidance(self, ranges, angles):
+        if len(ranges) == 0: # can happen when all obstacles are further away than laser can scan
+            omega = 0
+        else:
+            # normalize ranges 
+            norm_ranges = (ranges - np.min(ranges)) / (np.max(ranges) - np.min(ranges))
+
+            # compute the angular command velocity omega (turning rate)
+            k = 0.001
+            force = (4/norm_ranges - 1) * k 
+            force_angles = angles - np.pi # opposite force direction than sensor direction
+            force_y = np.sin(force_angles) * force
+            force_y = np.sum(force_y) # or use np.mean()
+            c = 3.0
+            omega_max = 2.84
+            omega = np.clip(force_y * c, -omega_max, omega_max)
+
+        return omega
+
 
 
 def get_all_behaviours():
-    return { 'minimax': MinimaxBehaviour }
+    return { 'minimax': MinimaxBehaviour,
+             'collision_avoidance': CollisionAvoidanceBehaviour}
