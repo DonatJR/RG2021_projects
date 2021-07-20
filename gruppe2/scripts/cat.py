@@ -44,6 +44,7 @@ class Cat:
 
         self.self_odom_callback_received = False
         self.enemy_odom_callback_received = False
+        self.scan_callback_received = False
 
     def __get_cheese_pos(self):
         rospack    = rospkg.RosPack()
@@ -66,6 +67,7 @@ class Cat:
         angles = angles[np.isfinite(ranges)]  # delete 'inf'
         ranges = ranges[np.isfinite(ranges)]
         self.scan = (ranges, angles)
+        self.scan_callback_received = True
 
     def __init_properties(self):
         random_velocity_factor = np.random.uniform(0, 0.2)
@@ -88,7 +90,7 @@ class Cat:
     def start(self):
         while not rospy.is_shutdown():            
             # we cannot calculate anything without having received our and the enemy position
-            if not self.self_odom_callback_received or not self.enemy_odom_callback_received:
+            if not self.self_odom_callback_received or not self.enemy_odom_callback_received or not self.scan_callback_received:
                 continue
             velocity, angle = self.behavior.get_velocity_and_omega(self.self_pos, self.enemy_pos, self.scan)
 

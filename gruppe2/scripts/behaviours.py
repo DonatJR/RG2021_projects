@@ -82,6 +82,8 @@ class MinimaxBehaviour(AbstractBehaviour):
 class CollisionAvoidanceBehaviour(AbstractBehaviour):
     def __init__(self, animal_properties: AnimalProperties):
         self.animal_properties = animal_properties
+        self.distance_to_obstacle = 1
+        self.ahead_bounds = (np.radians(290), np.radians(70))
 
     def get_velocity_and_omega(self, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation, scan: tuple):
         ranges = scan[0]
@@ -90,6 +92,8 @@ class CollisionAvoidanceBehaviour(AbstractBehaviour):
 
     def __collision_avoidance(self, ranges, angles):
         if len(ranges) == 0: # can happen when all obstacles are further away than laser can scan
+            omega = 0
+        elif (ranges[np.logical_or(angles > np.radians(self.ahead_bounds[0]), angles < self.ahead_bounds[1])] > self.distance_to_obstacle).all(): # if distance to obstacle is big, just drive forward
             omega = 0
         else:
             # normalize ranges 
