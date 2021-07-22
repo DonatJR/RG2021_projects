@@ -1,6 +1,6 @@
 class AnimalProperties:
-    def __init__(self, linear_vel, max_omega) -> None:
-        self.max_linear_vel = linear_vel
+    def __init__(self, max_linear_vel, max_omega) -> None:
+        self.max_linear_vel = max_linear_vel
         self.max_omega = max_omega
 
 class Positition2D:

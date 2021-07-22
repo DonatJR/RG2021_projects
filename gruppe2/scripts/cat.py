@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
+from mouse_tracker import MouseTracker
 from animal_types import AnimalPosAndOrientation
 import sys
 import os
 
-from behaviours import get_all_behaviours
+from all_behaviours import get_all_behaviours
 from animal_types import AnimalProperties
 
 import rospy
@@ -29,6 +30,9 @@ class Cat:
 
         # Cheese
         self.cheese_pos = self.__get_cheese_pos()
+
+        # keep track of enemy capabilities (currently only max velocity and max omega)
+        self.mouse_tracker = MouseTracker()
 
         # Properties
         self.__init_properties()
@@ -79,12 +83,12 @@ class Cat:
                                                 odom.pose.pose.orientation.y,
                                                 odom.pose.pose.orientation.z,
                                                 odom.pose.pose.orientation.w])[2]
-
         if self_odom:
             self.self_pos = AnimalPosAndOrientation(odom.pose.pose.position.x, odom.pose.pose.position.y, orientation)
             self.self_odom_callback_received = True
         else:
             self.enemy_pos = AnimalPosAndOrientation(odom.pose.pose.position.x, odom.pose.pose.position.y, orientation)
+            self.mouse_tracker.update_capabilities(odom.twist.twist.linear.x, odom.twist.twist.linear.z)
             self.enemy_odom_callback_received = True
 
     def start(self):
@@ -92,7 +96,8 @@ class Cat:
             # we cannot calculate anything without having received our and the enemy position
             if not self.self_odom_callback_received or not self.enemy_odom_callback_received or not self.scan_callback_received:
                 continue
-            velocity, angle = self.behavior.get_velocity_and_omega(self.self_pos, self.enemy_pos, self.scan)
+
+            velocity, angle = self.behavior.get_velocity_and_omega(self.self_pos, self.enemy_pos, self.scan, self.mouse_tracker.get_mouse_capabilities())
 
             out = Twist()
             out.linear.x = velocity
