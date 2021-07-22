@@ -23,39 +23,40 @@ class MinimaxBehaviour(AbstractBehaviour):
 
         raise NotImplementedError(f'{inspect.stack()[0][3]} is not implemented, do not use abstract behaviour class directly')
 
-    def __minimax(self, angular_vel: float, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation, depth: int, optimize_for_cat: bool, alpha: float = -np.inf, beta: float = np.inf):
+    def _minimax(self, angular_vel: float, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation, depth: int, optimize_for_cat: bool, alpha: float = -np.inf, beta: float = np.inf):
         if depth == 0:
-            return self.__cat_metric(own_pos, other_pos) if optimize_for_cat else self.__mouse_metric(own_pos, other_pos)
+            return self._cat_metric(own_pos, other_pos) if optimize_for_cat else self._mouse_metric(own_pos, other_pos)
 
         new_own_pos, new_other_pos = self.__system_update(angular_vel, own_pos, other_pos, optimize_for_cat)
 
         if optimize_for_cat:            
             value = np.inf
             for choice in self.strategy_choices:
-                new_value = self.__minimax(choice, new_own_pos, new_other_pos, depth-1, not optimize_for_cat, alpha, beta)
+                new_value = self._minimax(choice, new_own_pos, new_other_pos, depth-1, not optimize_for_cat, alpha, beta)
                 value = min(value, new_value)
                 beta = min(beta, value)
 
+                print(f"cat, value: {value}, choice: {choice}")
                 if value <= alpha:
                     break
 
         else:
             value = -np.inf
             for choice in self.current_enemy_choices:
-                new_value = self.__minimax(choice, new_own_pos, new_other_pos, depth-1, not optimize_for_cat, alpha, beta)
-                value = min(value, new_value)
-                beta = min(beta, value)
+                new_value = self._minimax(choice, new_own_pos, new_other_pos, depth-1, not optimize_for_cat, alpha, beta)
+                value = max(value, new_value)
+                alpha = max(alpha, value)
 
-                if value <= alpha:
+                if value >= beta:
                     break
 
         return value
 
 
-    def __cat_metric(self, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation):
+    def _cat_metric(self, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation):
         raise NotImplementedError(f'{inspect.stack()[0][3]} is not implemented, do not use abstract behaviour class directly')
 
-    def __mouse_metric(self, own_pos, other_pos):
+    def _mouse_metric(self, own_pos, other_pos):
         raise NotImplementedError(f'{inspect.stack()[0][3]} is not implemented, do not use abstract behaviour class directly')
     
     def __system_update(self, angular_vel: float, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation, optimize_for_cat: bool):
@@ -79,7 +80,7 @@ class MinimaxBehaviour(AbstractBehaviour):
             new_x = other_pos.pos.x
             new_y = other_pos.pos.y
             new_orientation = other_pos.orientation
-            speed = self.current_enemy_properties
+            speed = self.current_enemy_properties.max_linear_vel # TODO: maybe the mouse does not alwayse use max speed? make a rolling average over the last few velocities?
 
             for _ in range(iterations):
                 new_x += np.cos(new_orientation) * speed * dt
