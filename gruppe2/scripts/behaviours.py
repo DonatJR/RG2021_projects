@@ -2,6 +2,7 @@ from numpy.lib.function_base import angle
 from animal_types import AnimalPosAndOrientation, AnimalProperties, Positition2D
 import inspect
 import numpy as np
+import behavior_gates
 
 class AbstractBehaviour():
     def get_velocity_and_omega(self, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation,  scan: tuple):
@@ -111,8 +112,86 @@ class CollisionAvoidanceBehaviour(AbstractBehaviour):
 
         return omega
 
+class FreeSpaceBehaviour(AbstractBehaviour):
+    # added to try behaviour gates
+    def __init__(self, animal_properties: AnimalProperties):
+        self.animal_properties = animal_properties
 
+    def get_velocity_and_omega(self, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation, scan: tuple):
+        ranges = scan[0]
+        angles = scan[1]
+        return self.animal_properties.max_linear_vel, self.__free_space(ranges, angles)        
+
+    def __free_space(self, ranges, angles):
+        n = 50
+        ids = np.arange(len(ranges)) // n
+        ranges_average = np.bincount(ids, ranges) / np.bincount(ids)
+        angles_average = np.bincount(ids, angles) / np.bincount(ids)
+        i = np.argmax(ranges_average)
+        freespace_range = ranges_average[i]
+        freespace_angle = angles_average[i]
+
+        F_y = np.sin(freespace_angle) * freespace_range
+        omega = F_y * 1.0  # scaling force to rotational speed
+        return omega
+
+class combineMinimaxCa(AbstractBehaviour):
+    def __init__(self, animal_properties: AnimalProperties):
+        self.animal_properties = animal_properties
+        self.minimax = MinimaxBehaviour(animal_properties)
+        self.collision_avoidance = CollisionAvoidanceBehaviour(animal_properties)
+        self.free_space = FreeSpaceBehaviour(animal_properties)
+
+        self.distance_to_obstacle = 1
+        self.ahead_bounds = (np.radians(290), np.radians(70))
+
+    def get_velocity_and_omega(self, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation, scan: tuple):
+        return self.animal_properties.max_linear_vel, self.__combine(own_pos, other_pos, scan)
+
+    def __combine(self, own_pos, other_pos, scan):
+        _, omega_ca = self.collision_avoidance.get_velocity_and_omega(own_pos, other_pos, scan)
+        _, omega_minimax = self.minimax.get_velocity_and_omega(own_pos, other_pos, scan)
+        _, omega_fs = self.free_space.get_velocity_and_omega(own_pos, other_pos, scan)
+        ranges = scan[0]
+        angles = scan[1]
+
+        # return self.__utility_function(own_pos, other_pos, ranges, omega_minimax, omega_ca)
+        return self.__utility_function_behaviour_gates(omega_minimax, omega_ca, omega_fs)
+        # return self.__base_function(ranges, angles, omega_minimax, omega_ca)
+    
+    def __base_function(self, ranges, angles, omega_minimax, omega_ca):
+        # use minimax and ca only when wall is near
+        # Problem: he drives towards the wall, then collision avoidance takes effect, he drives away from the wall, then minimax takes effect again, which drives him towards the wall again.
+        if (ranges[np.logical_or(angles > np.radians(self.ahead_bounds[0]), angles < self.ahead_bounds[1])] > self.distance_to_obstacle).all(): # if distance to obstacle is big, use minimax
+            omega = omega_minimax
+        else:
+            omega = omega_ca
+        return omega
+
+    def __utility_function(self, own_pos, other_pos, ranges, omega_minimax, omega_ca):
+        # doesn't work at all
+        util_ca = 2/np.min(ranges) * 0.02  
+        util_ca = np.clip(util_ca, 0, 1)
+
+        euclid_dist = np.sqrt((other_pos.pos.x - own_pos.pos.x)**2 + (other_pos.pos.y - own_pos.pos.y)**2)
+        util_ho = 3/euclid_dist * 0.01 + 0.08 
+        util_ho = np.clip(util_ho, 0, 1)
+
+        print(util_ho)
+        print(util_ca)
+
+        omega = (util_ho * omega_minimax) *  (util_ca * omega_ca)
+        omega_max = 2.84
+        omega = np.clip(omega, -omega_max, omega_max)
+        return omega
+
+    def __utility_function_behaviour_gates(self, omega_minimax, omega_ca, omega_fs):
+        gate1 = behavior_gates.INVOKE(omega_minimax, omega_fs)
+        gate2 = behavior_gates.PREVAIL(omega_minimax, omega_ca)
+        gate3 = behavior_gates.PREVAIL(gate1, omega_ca)
+        return behavior_gates.OR(gate2, gate3)
 
 def get_all_behaviours():
     return { 'minimax': MinimaxBehaviour,
-             'collision_avoidance': CollisionAvoidanceBehaviour}
+             'collision_avoidance': CollisionAvoidanceBehaviour,
+             'combine_minimax_ca': combineMinimaxCa}
