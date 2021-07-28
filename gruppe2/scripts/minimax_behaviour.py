@@ -12,7 +12,7 @@ class MinimaxBehaviour(AbstractBehaviour):
         self.tree_depth = 3
 
         # TODO: how many choices do we want?
-        self.choices = 8
+        self.choices = 7
 
         self.strategy_choices = np.linspace(-self.animal_properties.max_omega, self.animal_properties.max_omega, self.choices)
 
@@ -32,18 +32,17 @@ class MinimaxBehaviour(AbstractBehaviour):
         if optimize_for_cat:            
             value = np.inf
             for choice in self.strategy_choices:
-                new_value = self._minimax(choice, new_own_pos, new_other_pos, depth-1, not optimize_for_cat, alpha, beta)
+                new_value = self._minimax(choice, new_own_pos, new_other_pos, depth-1, False, alpha, beta)
                 value = min(value, new_value)
                 beta = min(beta, value)
 
-                print(f"cat, value: {value}, choice: {choice}")
                 if value <= alpha:
                     break
 
         else:
             value = -np.inf
             for choice in self.current_enemy_choices:
-                new_value = self._minimax(choice, new_own_pos, new_other_pos, depth-1, not optimize_for_cat, alpha, beta)
+                new_value = self._minimax(choice, new_own_pos, new_other_pos, depth-1, True, alpha, beta)
                 value = max(value, new_value)
                 alpha = max(alpha, value)
 
