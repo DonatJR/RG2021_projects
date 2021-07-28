@@ -24,11 +24,7 @@
   <param name="mouse_start_pos_x" value="$(arg second_tb3_x_pos)"/>
   <param name="mouse_start_pos_y" value="$(arg second_tb3_y_pos)"/>
   
-  <!-- cheese position -->  
-  <arg name="cheese_x_pos" default="-2.0"/>
-  <arg name="cheese_y_pos" default=" 1.0"/>
-  <param name="cheese_pos_x" value="$(arg cheese_x_pos)"/>
-  <param name="cheese_pos_y" value="$(arg cheese_y_pos)"/>
+
   
 
   <!-- empty world simulation -->
