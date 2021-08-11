@@ -3,11 +3,11 @@
   <xacro:arg name="laser_visual" default="false"/>
   <xacro:arg name="imu_visual"   default="false"/>
 
-  <gazebo reference="base_link">
+  <gazebo reference="cat/base_link">
     <material>Gazebo/DarkGrey</material>
   </gazebo>
 
-  <gazebo reference="wheel_left_link">
+  <gazebo reference="cat/wheel_left_link">
     <mu1>0.1</mu1>
     <mu2>0.1</mu2>
     <kp>500000.0</kp>
@@ -18,7 +18,7 @@
     <material>Gazebo/FlatBlack</material>
   </gazebo>
 
-  <gazebo reference="wheel_right_link">
+  <gazebo reference="cat/wheel_right_link">
     <mu1>0.1</mu1>
     <mu2>0.1</mu2>
     <kp>500000.0</kp>
@@ -29,7 +29,7 @@
     <material>Gazebo/FlatBlack</material>
   </gazebo>
 
-  <gazebo reference="caster_back_link">
+  <gazebo reference="cat/caster_back_link">
     <mu1>0.1</mu1>
     <mu2>0.1</mu2>
     <kp>1000000.0</kp>
@@ -39,7 +39,7 @@
     <material>Gazebo/FlatBlack</material>
   </gazebo>
 
-  <gazebo reference="imu_link">
+  <gazebo reference="cat/imu_link">
     <sensor type="imu" name="imu">
       <always_on>true</always_on>
       <visualize>$(arg imu_visual)</visualize>
@@ -54,14 +54,14 @@
       <odometryFrame>odom</odometryFrame>
       <odometrySource>world</odometrySource>
       <publishOdomTF>true</publishOdomTF>
-      <robotBaseFrame>base_footprint</robotBaseFrame>
+      <robotBaseFrame>cat/base_footprint</robotBaseFrame>
       <publishWheelTF>false</publishWheelTF>
       <publishTf>true</publishTf>
       <publishWheelJointState>true</publishWheelJointState>
       <legacyMode>false</legacyMode>
       <updateRate>30</updateRate>
-      <leftJoint>wheel_left_joint</leftJoint>
-      <rightJoint>wheel_right_joint</rightJoint>
+      <leftJoint>cat/wheel_left_joint</leftJoint>
+      <rightJoint>cat/wheel_right_joint</rightJoint>
       <wheelSeparation>0.160</wheelSeparation>
       <wheelDiameter>0.066</wheelDiameter>
       <wheelAcceleration>1</wheelAcceleration>
@@ -73,8 +73,8 @@
   <gazebo>
     <plugin name="imu_plugin" filename="libgazebo_ros_imu.so">
       <alwaysOn>true</alwaysOn>
-      <bodyName>imu_link</bodyName>
-      <frameName>imu_link</frameName>
+      <bodyName>cat/imu_link</bodyName>
+      <frameName>cat/imu_link</frameName>
       <topicName>imu</topicName>
       <serviceName>imu_service</serviceName>
       <gaussianNoise>0.0</gaussianNoise>
@@ -99,7 +99,7 @@
     </plugin>
   </gazebo>
 
-  <gazebo reference="base_scan">
+  <gazebo reference="cat/base_scan">
     <material>Gazebo/FlatBlack</material>
     <sensor type="ray" name="lds_lfcd_sensor">
       <pose>0 0 0 0 0 0</pose>
@@ -127,7 +127,7 @@
       </ray>
       <plugin name="gazebo_ros_lds_lfcd_controller" filename="libgazebo_ros_laser.so">
         <topicName>scan</topicName>
-        <frameName>base_scan</frameName>
+        <frameName>cat/base_scan</frameName>
       </plugin>
     </sensor>
   </gazebo>
