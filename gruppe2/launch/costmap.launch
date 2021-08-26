@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="costmap_2d" type="costmap_2d_node" name="custom_cat_costmap" > 
+    <rosparam command="load" file="$(find gruppe2)/param/costmap.yaml" />
+  </node>
+</launch>

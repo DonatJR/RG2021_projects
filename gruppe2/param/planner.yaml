@@ -1,0 +1,3 @@
+# cat_planner:
+use_dijkstra: false
+outline_map: false

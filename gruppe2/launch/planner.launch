@@ -1,0 +1,6 @@
+<launch>
+  <node pkg="global_planner" type="planner" name="cat_planner" > 
+    <rosparam command="load" file="$(find gruppe2)/param/costmap.yaml" />
+    <rosparam command="load" file="$(find gruppe2)/param/planner.yaml" />
+  </node>
+</launch>

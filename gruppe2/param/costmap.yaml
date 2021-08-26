@@ -1,0 +1,32 @@
+costmap:
+  global_frame: map
+  robot_base_frame: cat/base_footprint
+
+  footprint: [[-0.105, -0.105], [-0.105, 0.105], [0.041, 0.105], [0.041, -0.105]]
+  #robot_radius: 0.105
+
+  observation_sources: scan
+  scan: {sensor_frame: cat/base_scan, data_type: LaserScan, topic: cat/scan, marking: true, clearing: true}
+  
+  always_send_full_costmap: false
+
+  obstacle_range: 3.0
+  raytrace_range: 3.5
+
+  update_frequency: 5.0
+  publish_frequency: 5.0
+  transform_tolerance: 0.5
+
+  rolling_window: true
+  width: 20.0
+  height: 20.0
+  resolution: 0.05
+  origin_x: -10.0
+  origin_y: -10.0
+
+  inflation_radius: 0.5
+  cost_scaling_factor: 1.5
+
+  # plugins:
+  #   - {name: obstacle_layer, type: "costmap_2d::ObstacleLayer"}
+  #   - {name: inflation_layer, type: "costmap_2d::InflationLayer"}

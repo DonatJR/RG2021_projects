@@ -19,8 +19,7 @@ import numpy as np
 
 from rogata_library import rogata_helper 
 
-# TODO: remove or comment in again once we have the arguments locked down
-# assert len(sys.argv) >= 6
+assert len(sys.argv) >= 6
 
 class Cat:
     def __init__(self, self_cmd_vel_topic, self_odom_topic, self_scan, enemy_odom_topic, Behaviour) -> None:
@@ -54,10 +53,16 @@ class Cat:
         rospack    = rospkg.RosPack()
         catch_path = rospack.get_path('catch')
         cheese_positions = []
-        for i in [1,2,3,4]:
+        # as both map 1 and map 2 setup nodes are initialized as rogata_engine, we have to get creative to find the relevant cheese
+        # test if the first cheese middle point is inside of cheese object, if yes we are dealing with map 1, else with map 2
+        cheese_1_middle = np.mean(np.load(os.path.join(catch_path, 'maps/cheese_' + str(1) + '.npy')), axis=0)[0]
+        cheese_indices = [1,2,3,4] if rogata_helper().inside("cheese_obj",cheese_1_middle) else [5,6,7,8]
+
+        for i in cheese_indices:
             filepath   = os.path.join(catch_path, 'maps/cheese_'+str(i)+'.npy')
             cheese     = np.load(filepath)    
             cheese_positions.append(np.mean(cheese, axis=0)[0])
+        
         return cheese_positions
 
     def __scan_callback(self, scan_msg):
@@ -110,12 +115,10 @@ if __name__ == '__main__':
     self_cmd_vel_topic = sys.argv[1]
     self_odom_topic = sys.argv[2]
     self_scan = sys.argv[3]
-    # TODO: can we use this? shouldn't it be the perception of the other animal instead of odom directly?
     enemy_odom_topic = sys.argv[4]
     behaviour_to_use = sys.argv[5]
 
     try:
-        # TODO: is this necessay? does it maybe have to be another value instead of 'cat'?
         rospy.init_node('cat')
         cat = Cat(self_cmd_vel_topic, self_odom_topic, self_scan, enemy_odom_topic, get_all_behaviours()[behaviour_to_use])
         cat.start()
