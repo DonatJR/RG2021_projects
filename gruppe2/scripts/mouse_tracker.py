@@ -13,7 +13,7 @@ class MouseTracker():
 
         if (np.abs(mouse_omega) > self.mouse_properties.max_omega):
             self.mouse_properties.max_omega = np.abs(mouse_omega)
-
+    
     def update_cheese_target(self):
         pass
 

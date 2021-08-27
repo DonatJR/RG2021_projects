@@ -2,6 +2,6 @@
   <include file="$(find gruppe2)/launch/gmapping.launch"/>
   <include file="$(find gruppe2)/launch/planner.launch"/>
 
-  <node name="cat" type="cat.py" pkg="gruppe2" args="/cat/cmd_vel /cat/odom /cat/scan /mouse/odom seek_minimax"  output="screen"/>
+  <node name="cat" type="cat.py" pkg="gruppe2" args="/cat/cmd_vel /cat/odom /cat/scan /mouse/odom minimax"  output="screen"/>
   <!-- <node name="mouse" type="minimax.py" pkg="gruppe2" args="/mouse/cmd_vel True /mouse/odom /mouse/scan /cat/cmd_vel /mouse/perception_of_cat"  output="screen"/> -->
 </launch>

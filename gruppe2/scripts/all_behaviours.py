@@ -1,12 +1,10 @@
 from collision_avoidance_behaviour import CollisionAvoidanceBehaviour
-from seek_minimax_behaviour import SeekMinimaxBehaviour
-from pursuit_minimax_behaviour import PursuitMinimaxBehaviour
-from seek_minimax_ca_combined_behaviour import CombineSeekMinimaxCa
+from minimax_behaviour import MinimaxBehaviour
+from minimax_ca_combined_behaviour import CombineMinimaxCa
 
 def get_all_behaviours():
     return { 
         'collision_avoidance': CollisionAvoidanceBehaviour,
-        'seek_minimax': SeekMinimaxBehaviour,
-        'pursuit_minimax': PursuitMinimaxBehaviour,
-        'combine_seek_ca': CombineSeekMinimaxCa
+        'minimax': MinimaxBehaviour,
+        'minimax_ca': CombineMinimaxCa
     }

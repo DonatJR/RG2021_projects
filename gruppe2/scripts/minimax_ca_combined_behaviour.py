@@ -1,5 +1,5 @@
 from abstract_behaviour import AbstractBehaviour
-from seek_minimax_behaviour import SeekMinimaxBehaviour
+from minimax_behaviour import MinimaxBehaviour
 from collision_avoidance_behaviour import CollisionAvoidanceBehaviour
 from freespace_behaviour import FreeSpaceBehaviour
 from animal_types import AnimalPosAndOrientation, AnimalProperties
@@ -7,10 +7,10 @@ from animal_types import AnimalPosAndOrientation, AnimalProperties
 import numpy as np
 import behavior_gates
 
-class CombineSeekMinimaxCa(AbstractBehaviour):
+class CombineMinimaxCa(AbstractBehaviour):
     def __init__(self, animal_properties: AnimalProperties):
         self.animal_properties = animal_properties
-        self.minimax = SeekMinimaxBehaviour(animal_properties)
+        self.minimax = MinimaxBehaviour(animal_properties)
         self.collision_avoidance = CollisionAvoidanceBehaviour(animal_properties)
         self.free_space = FreeSpaceBehaviour(animal_properties)
 
