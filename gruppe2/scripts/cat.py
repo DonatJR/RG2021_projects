@@ -92,7 +92,7 @@ class Cat:
             self.self_pos = AnimalPosAndOrientation(odom.pose.pose.position.x, odom.pose.pose.position.y, orientation)
             self.self_odom_callback_received = True
         else:
-            self.enemy_pos = AnimalPosAndOrientation(odom.pose.pose.position.x, odom.pose.pose.position.y, orientation)
+            self.mouse_tracker.update_position_and_orientation(AnimalPosAndOrientation(odom.pose.pose.position.x, odom.pose.pose.position.y, orientation))
             self.mouse_tracker.update_capabilities(odom.twist.twist.linear.x, odom.twist.twist.linear.z)
             self.enemy_odom_callback_received = True
 
@@ -102,7 +102,7 @@ class Cat:
             if not self.self_odom_callback_received or not self.enemy_odom_callback_received or not self.scan_callback_received:
                 continue
 
-            velocity, angle = self.behavior.get_velocity_and_omega(self.self_pos, self.enemy_pos, self.scan, self.mouse_tracker.get_mouse_capabilities())
+            velocity, angle = self.behavior.get_velocity_and_omega(self.self_pos, self.mouse_tracker.get_mouse_position_and_orientation(), self.scan, self.mouse_tracker.get_mouse_capabilities())
 
             out = Twist()
             out.linear.x = velocity
@@ -116,7 +116,7 @@ if __name__ == '__main__':
     self_odom_topic = sys.argv[2]
     self_scan = sys.argv[3]
     enemy_odom_topic = sys.argv[4]
-    behaviour_to_use = sys.argv[5]
+    behaviour_to_use = 'minimax' #sys.argv[5] # behaviour does only need to change for testing, so setting it here in the script directly is easier
 
     try:
         rospy.init_node('cat')

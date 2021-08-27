@@ -1,4 +1,4 @@
-from animal_types import AnimalProperties
+from animal_types import AnimalPosAndOrientation, AnimalProperties
 
 import numpy as np
 
@@ -13,12 +13,18 @@ class MouseTracker():
 
         if (np.abs(mouse_omega) > self.mouse_properties.max_omega):
             self.mouse_properties.max_omega = np.abs(mouse_omega)
+
+    def update_position_and_orientation(self, pos_and_orientation: AnimalPosAndOrientation):
+        self.mouse_pos = pos_and_orientation
     
     def update_cheese_target(self):
         pass
 
-    def get_mouse_capabilities(self):
+    def get_mouse_capabilities(self) -> AnimalProperties:
         return self.mouse_properties
+
+    def get_mouse_position_and_orientation(self) -> AnimalPosAndOrientation:
+        return self.mouse_pos
 
     def get_cheese_target(self):
         pass
