@@ -96,7 +96,7 @@ class Cat:
             self.mouse_tracker.update_capabilities(odom.twist.twist.linear.x, odom.twist.twist.linear.z)
             self.enemy_odom_callback_received = True
 
-    def start(self):
+    def spin(self):
         while not rospy.is_shutdown():            
             # we cannot calculate anything without having received our and the enemy position
             if not self.self_odom_callback_received or not self.enemy_odom_callback_received or not self.scan_callback_received:
@@ -121,6 +121,6 @@ if __name__ == '__main__':
     try:
         rospy.init_node('cat')
         cat = Cat(self_cmd_vel_topic, self_odom_topic, self_scan, enemy_odom_topic, get_all_behaviours()[behaviour_to_use])
-        cat.start()
+        cat.spin()
     except rospy.ROSInterruptException:
         pass
