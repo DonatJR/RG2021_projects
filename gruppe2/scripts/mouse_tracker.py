@@ -29,7 +29,7 @@ class MouseTracker():
         min_dist = np.inf
         min_dist_idx = 0
         for idx, cheese in enumerate(self.cheese_pos):
-            if get_distance_between_positions(self.mouse_pos, Positition2D(cheese[0], cheese[1])) < min_dist:
+            if get_distance_between_positions(self.mouse_pos.pos, Positition2D(cheese[0], cheese[1])) < min_dist:
                 min_dist_idx = idx
 
         # TODO future: maybe get other nearby cheese positions and decide based on viewing angle??

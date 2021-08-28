@@ -1,4 +1,4 @@
-# TODO future: write recovery behaviour if necessary (drive towards the most open space around us -> drive backwards for a bit -> rotate 360 degrees and then drive backwards for a bit)
+# TODO maybe future: write recovery behaviour if necessary (drive towards the most open space around us -> drive backwards for a bit -> rotate 360 degrees and then drive backwards for a bit)
 # realistically, if we need to do this we probably lost the game anyway, so what is the point?! ;)
 from helper_types import AnimalProperties
 import inspect

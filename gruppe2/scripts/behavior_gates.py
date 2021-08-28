@@ -1,7 +1,7 @@
 import numpy as np
 
 def OR(x,y):
-    return  x+y-x*y*np.tanh(x+y)/np.tanh(2)
+    return x+y-x*y*np.tanh(x+y)/np.tanh(2)
 
 def AND(x,y):
     return x*y*np.tanh(x+y)/np.tanh(2)

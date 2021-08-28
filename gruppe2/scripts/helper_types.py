@@ -15,16 +15,12 @@ class PosAndOrientation:
         self.pos = Positition2D(x, y)
         self.orientation: float = orientation
 
-def get_angle_between_positions(own_pos: PosAndOrientation, other_pos: PosAndOrientation):
-    own_orientation_vec = np.array([np.cos(own_pos.orientation), np.sin(own_pos.orientation)])
-    own_orientation_vec /= np.linalg.norm(own_orientation_vec)
-
-    other_to_own_vector = np.array([other_pos.pos.x - own_pos.pos.x, other_pos.pos.y - own_pos.pos.y])
-    other_to_own_vector /= np.linalg.norm(other_to_own_vector)
-
-    angle_to_other_position = np.arccos(np.dot(own_orientation_vec, other_to_own_vector))
-
-    return angle_to_other_position
+def get_angle_between_positions(pos_one: PosAndOrientation, pow_two: PosAndOrientation):
+    x_diff = pow_two.pos.x - pos_one.pos.x
+    y_diff = pow_two.pos.y - pos_one.pos.y
+    angle_towards_second_pos = np.arctan2(y_diff, x_diff)
+    
+    return np.arctan2(np.sin(angle_towards_second_pos - pos_one.orientation), np.cos(angle_towards_second_pos - pos_one.orientation))
 
 def get_distance_between_positions(pos_one: Positition2D, pos_two: Positition2D):
     return np.sqrt((pos_two.x - pos_one.x) ** 2 + (pos_two.y - pos_one.y) ** 2)

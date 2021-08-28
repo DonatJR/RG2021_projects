@@ -24,7 +24,7 @@ costmap:
   origin_x: -50.0
   origin_y: -50.0
 
-  inflation_radius: 0.5
+  inflation_radius: 0.55
   cost_scaling_factor: 12.0
 
   # plugins:

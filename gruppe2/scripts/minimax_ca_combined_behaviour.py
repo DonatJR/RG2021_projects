@@ -1,4 +1,4 @@
-from gruppe2.scripts.mouse_tracker import MouseTracker
+from mouse_tracker import MouseTracker
 from minimax_behaviour import MinimaxBehaviour
 from collision_avoidance_behaviour import CollisionAvoidanceBehaviour
 from freespace_behaviour import FreeSpaceBehaviour
@@ -8,7 +8,7 @@ import numpy as np
 import behavior_gates
 
 class CombineMinimaxCaBehaviour():
-    """Combines minimax and collision avoidance with  and switches between them to always use the most appropriate one"""
+    """Combines minimax and collision avoidance and switches between them to always use the most appropriate one"""
     def __init__(self, animal_properties: AnimalProperties):
         self.animal_properties = animal_properties
         self.minimax = MinimaxBehaviour(animal_properties)
@@ -68,4 +68,4 @@ class CombineMinimaxCaBehaviour():
         # gate1 = behavior_gates.PREVAIL(omega_minimax, omega_fs)
         # gate2 = behavior_gates.INVOKE(omega_minimax, omega_ca)
         # gate3 = behavior_gates.INVOKE(gate1, omega_ca)
-        return behavior_gates.INVOKE(omega_minimax, omega_ca) # TODO
+        return behavior_gates.PREVAIL(omega_minimax, omega_ca) # TODO

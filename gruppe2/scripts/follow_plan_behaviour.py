@@ -19,7 +19,7 @@ class FollowPlanBehaviour():
         self.last_plan_other_pos = None
         self.first_plan_time = None
         self.beginning_plan_regenerated = False
-        self.pos_tolerance = 0.5
+        self.pos_tolerance = 0.5 # TODO make smaller
         self.path_driven = []
         self.goal_pub = rospy.Publisher("/cat_goal", PoseStamped, queue_size=10)
         self.cat_to_goal_pub = rospy.Publisher("/cat_to_goal", PoseStamped, queue_size=10)
@@ -118,19 +118,9 @@ class FollowPlanBehaviour():
                         break
 
                     goal_pos = self.__get_pos_from_pose_stamed(plan.poses[pose_index])
-                    print("NEXT INDEX: ", pose_index)
 
                 # drive towards goal pos
-                own_orientation_vec = np.array([np.cos(last_own_pos.orientation), np.sin(last_own_pos.orientation)])
-                own_orientation_vec /= np.linalg.norm(own_orientation_vec)
-
-                other_to_own_vector = np.array([-last_own_pos.pos.x + goal_pos.pos.x, -last_own_pos.pos.y + goal_pos.pos.y])
-                other_to_own_vector /= np.linalg.norm(other_to_own_vector)
-
-                angle = np.arctan2(other_to_own_vector[1] - own_orientation_vec[1], other_to_own_vector[0] - own_orientation_vec[0])
-                angle = angle + last_own_pos.orientation + np.pi
-
-                print(np.rad2deg(last_own_pos.orientation), np.rad2deg(angle))
+                angle_to_turn = get_angle_between_positions(last_own_pos, goal_pos)
 
                 # this is for RVIZ visualization only
                 try:
@@ -140,7 +130,7 @@ class FollowPlanBehaviour():
                     cat_pose.header.stamp = rospy.Time.now()
                     cat_pose.pose.position.x = last_own_pos.pos.x
                     cat_pose.pose.position.y = last_own_pos.pos.y
-                    [a, b, c, d] = quaternion_from_euler(0, 0, angle)
+                    [a, b, c, d] = quaternion_from_euler(0, 0, angle_to_turn + last_own_pos.orientation)
                     cat_pose.pose.orientation.x = a
                     cat_pose.pose.orientation.y = b
                     cat_pose.pose.orientation.z = c
@@ -150,7 +140,7 @@ class FollowPlanBehaviour():
                     print(ecx)
 
 
-                yield self.animal_properties.max_linear_vel, angle
+                yield self.animal_properties.max_linear_vel, angle_to_turn
 
 
     def __pos_inside_driven_path(self, pos):
