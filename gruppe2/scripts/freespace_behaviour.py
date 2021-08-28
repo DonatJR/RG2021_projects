@@ -1,4 +1,4 @@
-from helper_types import AnimalPosAndOrientation, AnimalProperties
+from helper_types import AnimalProperties
 
 import numpy as np
 

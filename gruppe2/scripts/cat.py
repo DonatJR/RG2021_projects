@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from mouse_tracker import MouseTracker
-from helper_types import AnimalProperties, AnimalPosAndOrientation
+from helper_types import AnimalProperties, PosAndOrientation
 import sys
 import os
 
@@ -9,7 +9,7 @@ from all_behaviours import get_all_behaviours
 
 import rospy
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, PoseStamped
 from sensor_msgs.msg import LaserScan
 import rospkg
 
@@ -27,7 +27,7 @@ class Cat:
         self.cheese_pos = self.__get_cheese_pos()
 
         # keep track of enemy capabilities (currently only max velocity and max omega)
-        self.mouse_tracker = MouseTracker()
+        self.mouse_tracker = MouseTracker(self.cheese_pos)
 
         # Properties
         self.__init_properties()
@@ -56,8 +56,13 @@ class Cat:
 
         for i in cheese_indices:
             filepath   = os.path.join(catch_path, 'maps/cheese_'+str(i)+'.npy')
-            cheese     = np.load(filepath)    
-            cheese_positions.append(np.mean(cheese, axis=0)[0])
+            cheese     = np.load(filepath)
+            pos = np.mean(cheese, axis=0)[0]
+            # negative transform from `catch_tracker.py` odom callback, we guess these are the transformations between ros and rogata coordinates
+            pos = pos-np.array([500,500])
+            pos /= 100
+
+            cheese_positions.append(pos)
         
         return cheese_positions
 
@@ -85,10 +90,10 @@ class Cat:
                                                 odom.pose.pose.orientation.z,
                                                 odom.pose.pose.orientation.w])[2]
         if self_odom:
-            self.self_pos = AnimalPosAndOrientation(odom.pose.pose.position.x, odom.pose.pose.position.y, orientation)
+            self.self_pos = PosAndOrientation(odom.pose.pose.position.x, odom.pose.pose.position.y, orientation)
             self.self_odom_callback_received = True
         else:
-            self.mouse_tracker.update_position_and_orientation(AnimalPosAndOrientation(odom.pose.pose.position.x, odom.pose.pose.position.y, orientation))
+            self.mouse_tracker.update_position_and_orientation(PosAndOrientation(odom.pose.pose.position.x, odom.pose.pose.position.y, orientation))
             self.mouse_tracker.update_capabilities(odom.twist.twist.linear.x, odom.twist.twist.linear.z)
             self.enemy_odom_callback_received = True
 

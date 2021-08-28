@@ -4,7 +4,7 @@ from mouse_tracker import MouseTracker
 from follow_plan_behaviour import FollowPlanBehaviour
 from minimax_ca_combined_behaviour import CombineMinimaxCaBehaviour
 from recovery_behaviours import RecoveryBehaviours
-from helper_types import AnimalProperties, AnimalPosAndOrientation, get_angle_to_other_robot
+from helper_types import AnimalProperties, PosAndOrientation, get_angle_between_positions, get_distance_between_positions
 
 import numpy as np
 
@@ -16,30 +16,26 @@ class CombinedBehaviours():
         self.follow_plan_behaviour = FollowPlanBehaviour(animal_properties)
         # self.recovery_behaviour = RecoveryBehaviours(animal_properties)
 
-    def get_velocity_and_omega(self, own_pos: AnimalPosAndOrientation, mouse_tracker: MouseTracker, scan: tuple):
+    def get_velocity_and_omega(self, own_pos: PosAndOrientation, mouse_tracker: MouseTracker, scan: tuple):
         other_pos = mouse_tracker.get_mouse_position_and_orientation()
-        mean_enemy_vel = mouse_tracker.get_mean_velocity()
-        enemy_capabilities = mouse_tracker.get_mouse_capabilities()
+
         # if self.__needs_recovery():
         #     return self.recovery_behaviour()
 
         if self.__is_mouse_very_close_and_visible(own_pos, other_pos, scan):
-            return self.minimax_behaviour.get_velocity_and_omega(own_pos, other_pos, enemy_capabilities, mean_enemy_vel)
+            return self.minimax_behaviour.get_velocity_and_omega(own_pos, mouse_tracker)
         elif self.__is_mouse_close_and_visible(own_pos, other_pos, scan):
-            return self.minimax_ca_behaviour.get_velocity_and_omega(own_pos, other_pos, mean_enemy_vel, scan, enemy_capabilities)
+            return self.minimax_ca_behaviour.get_velocity_and_omega(own_pos, mouse_tracker, scan)
         else:
-            return self.follow_plan_behaviour.get_velocity_and_omega(own_pos, other_pos)
+            return self.follow_plan_behaviour.get_velocity_and_omega(own_pos, other_pos, scan)
 
     def __is_mouse_very_close_and_visible(self, own_pos, other_pos, scan):
-        distance = self.__get_distance_between_robots(own_pos, other_pos)
+        distance = get_distance_between_positions(own_pos.pos, other_pos.pos)
         return distance < 0.8 and self.__is_other_robot_visible(own_pos, other_pos, scan, distance)
 
     def __is_mouse_close_and_visible(self, own_pos, other_pos, scan):
-        distance = self.__get_distance_between_robots(own_pos, other_pos)
+        distance = get_distance_between_positions(own_pos.pos, other_pos.pos)
         return distance < 1.8 and self.__is_other_robot_visible(own_pos, other_pos, scan, distance)
-
-    def __get_distance_between_robots(self, own_pos, other_pos):
-        return np.sqrt((other_pos.pos.x - own_pos.pos.x) ** 2 + (other_pos.pos.y - own_pos.pos.y) ** 2)
 
     def __is_other_robot_visible(self, own_pos, other_pos, scan, distance):
         scan_pointing_to_other_robot = self.__find_scan_pointing_to_other_robot(own_pos, other_pos, scan[1])
@@ -49,7 +45,7 @@ class CombinedBehaviours():
         return other_robot_visible
 
     def __find_scan_pointing_to_other_robot(self, own_pos, other_pos, angles):
-        angle_to_other_robot = get_angle_to_other_robot(own_pos, other_pos)
+        angle_to_other_robot = get_angle_between_positions(own_pos, other_pos)
         smallest_diff = np.inf
 
         for idx, angle in enumerate(angles):

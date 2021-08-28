@@ -1,7 +1,8 @@
+from gruppe2.scripts.mouse_tracker import MouseTracker
 from minimax_behaviour import MinimaxBehaviour
 from collision_avoidance_behaviour import CollisionAvoidanceBehaviour
 from freespace_behaviour import FreeSpaceBehaviour
-from helper_types import AnimalPosAndOrientation, AnimalProperties
+from helper_types import PosAndOrientation, AnimalProperties
 
 import numpy as np
 import behavior_gates
@@ -17,12 +18,13 @@ class CombineMinimaxCaBehaviour():
         self.distance_to_obstacle = 1
         self.ahead_bounds = (np.radians(290), np.radians(70))
 
-    def get_velocity_and_omega(self, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation, mean_enemy_vel: float, scan: tuple, enemy_capabilities: AnimalProperties):
-        return self.animal_properties.max_linear_vel, self.__combine(own_pos, other_pos, scan, enemy_capabilities, mean_enemy_vel)
+    def get_velocity_and_omega(self, own_pos: PosAndOrientation, mouse_tracker: MouseTracker, scan: tuple):
+        return self.animal_properties.max_linear_vel, self.__combine(own_pos, mouse_tracker, scan)
 
-    def __combine(self, own_pos, other_pos, scan, enemy_capabilities, mean_enemy_vel):
+    def __combine(self, own_pos, mouse_tracker: MouseTracker, scan):
+
         _, omega_ca = self.collision_avoidance.get_velocity_and_omega(scan)
-        _, omega_minimax = self.minimax.get_velocity_and_omega(own_pos, other_pos, enemy_capabilities, mean_enemy_vel)
+        _, omega_minimax = self.minimax.get_velocity_and_omega(own_pos, mouse_tracker)
         _, omega_fs = self.free_space.get_velocity_and_omega(scan)
         
         # ranges = scan[0]

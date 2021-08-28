@@ -24,8 +24,8 @@ costmap:
   origin_x: -50.0
   origin_y: -50.0
 
-  inflation_radius: 0.45
-  cost_scaling_factor: 15.0
+  inflation_radius: 0.5
+  cost_scaling_factor: 12.0
 
   # plugins:
   #   - {name: obstacle_layer, type: "costmap_2d::ObstacleLayer"}
