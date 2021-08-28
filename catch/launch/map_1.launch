@@ -66,9 +66,9 @@
 
 
   	
-  <node name="map_1_setup" type="map_1_setup.py" pkg="catch" output="screen"/>
-  <node name="catch_tracker" type="catch_tracker.py" pkg="catch" output="screen"  /> 
-  <node name="catch_client" type="catch_client.py" pkg="catch" output="screen" /> 
+  <node name="map_1_setup" type="map_1_setup.py" pkg="catch" />
+  <node name="catch_tracker" type="catch_tracker.py" pkg="catch" /> 
+  <node name="catch_client" type="catch_client.py" pkg="catch" output="screen"/> 
 
 
   <include file="$(find gruppe2)/launch/gruppe2.launch"/>

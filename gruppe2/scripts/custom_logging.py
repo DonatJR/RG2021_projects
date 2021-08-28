@@ -1,1 +1,0 @@
-# TODO: add a simple helper to log to a file instead of the console

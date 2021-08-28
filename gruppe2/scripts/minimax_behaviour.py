@@ -1,35 +1,33 @@
-from abstract_behaviour import AbstractBehaviour
-from animal_types import AnimalPosAndOrientation, AnimalProperties
+from helper_types import AnimalPosAndOrientation, AnimalProperties, get_angle_to_other_robot
 
 import numpy as np
-import inspect
 
-class MinimaxBehaviour(AbstractBehaviour):
+class MinimaxBehaviour():
+    """Uses minimax algorithm to find best cmd_vel properties to minimize distance to mouse and keep mouse away from cheese (based on a simple assumption that the mouse wants to run away from the cat)"""
     def __init__(self, animal_properties: AnimalProperties):
         self.animal_properties = animal_properties
 
-        # TODO: which depth do we want?
+        # anymore and calculations take too long
         self.tree_depth = 3
 
-        # TODO: how many choices do we want?
+        # anymore and calculations take too long
         self.choices = 7
 
         self.strategy_choices = np.linspace(-self.animal_properties.max_omega, self.animal_properties.max_omega, self.choices)
 
-    def get_velocity_and_omega(self, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation, scan: tuple, enemy_capabilities: AnimalProperties):
+    def get_velocity_and_omega(self, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation, enemy_capabilities: AnimalProperties, mean_enemy_vel: float):
         self.current_enemy_properties = enemy_capabilities # enemy capabilities could incorporate more info than just properties in the future, but for now just save it as is
         self.current_enemy_choices = np.linspace(-enemy_capabilities.max_omega, enemy_capabilities.max_omega, self.choices)
 
-        all_move_values = [self._minimax(choice, own_pos, other_pos, self.tree_depth, True) for choice in self.strategy_choices]
+        all_move_values = [self._minimax(choice, own_pos, other_pos, self.tree_depth, mean_enemy_vel, True) for choice in self.strategy_choices]
 
-        # TODO: when do we want linear velocity not to be the max value?
         return self.animal_properties.max_linear_vel, self.strategy_choices[np.argmin(all_move_values)]
 
-    def _minimax(self, angular_vel: float, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation, depth: int, optimize_for_cat: bool, alpha: float = -np.inf, beta: float = np.inf):
+    def _minimax(self, angular_vel: float, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation, mean_enemy_vel: float, depth: int, optimize_for_cat: bool, alpha: float = -np.inf, beta: float = np.inf):
         if depth == 0:
             return self._cat_metric(own_pos, other_pos) if optimize_for_cat else self._mouse_metric(own_pos, other_pos)
 
-        new_own_pos, new_other_pos = self.__system_update(angular_vel, own_pos, other_pos, optimize_for_cat)
+        new_own_pos, new_other_pos = self.__system_update(angular_vel, own_pos, other_pos, mean_enemy_vel, optimize_for_cat)
 
         if optimize_for_cat:            
             value = np.inf
@@ -56,17 +54,14 @@ class MinimaxBehaviour(AbstractBehaviour):
 
     def _cat_metric(self, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation):
         # TODO: we need to include the cheese positions in here as well somehow
-        # maybe adopt some guarding behaviour if both cat and mouse are near a cheese
-        # and the mouse wants to reach it (cheese guarding could also be another MiniMax implementation
-        # which we can then switch to if we want!)
         own_orientation_vec = np.array([np.cos(own_pos.orientation), np.sin(own_pos.orientation)])
         own_orientation_vec /= np.linalg.norm(own_orientation_vec)
 
         other_to_own_vector = np.array([other_pos.pos.x - own_pos.pos.x, other_pos.pos.y - own_pos.pos.y])
         other_to_own_vector /= np.linalg.norm(other_to_own_vector)
 
-        angle = np.rad2deg(np.arccos(np.dot(own_orientation_vec, other_to_own_vector)))
-        
+        angle = np.rad2deg(get_angle_to_other_robot(own_pos, other_pos))
+
         # check whether other animal is in front or behind us
         # use a little less than 180 deg to mean 'in front'
         other_behind_own = angle < 290 and angle > 70
@@ -80,7 +75,7 @@ class MinimaxBehaviour(AbstractBehaviour):
 
         distance = np.sqrt((other_pos.pos.x - own_pos.pos.x) ** 2 + (other_pos.pos.y - own_pos.pos.y) ** 2)
 
-        # normalize distance (0 / 25 min / max distance)
+        # normalize distance (0 / 25 for min / max distance)
         distance = (distance - 0) / (25 - 0)
 
         # normalize angle
@@ -91,12 +86,12 @@ class MinimaxBehaviour(AbstractBehaviour):
         return distance_weight * distance + angle_weight * (1 - np.abs(0.5 - angle))
     
     def _mouse_metric(self, own_pos, other_pos):
-        # TODO: it could be (i.e. it is pretty much given) that the mouse uses another system than we are, 
+        # it could be (i.e. it is pretty much given) that the mouse uses another system than we are, 
         # so we might try to figure out what this system is and model it here as best as we can
         # for now, just return the same metric as for ourselves 
         return self._cat_metric(own_pos, other_pos)
     
-    def __system_update(self, angular_vel: float, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation, optimize_for_cat: bool):
+    def __system_update(self, angular_vel: float, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation, mean_enemy_vel:float, optimize_for_cat: bool):
         iterations = 10
         dt = 1.0 / iterations
 
@@ -117,7 +112,7 @@ class MinimaxBehaviour(AbstractBehaviour):
             new_x = other_pos.pos.x
             new_y = other_pos.pos.y
             new_orientation = other_pos.orientation
-            speed = self.current_enemy_properties.max_linear_vel # TODO: maybe the mouse does not alwayse use max speed? make a rolling average over the last few velocities?
+            speed = mean_enemy_vel # TODO: maybe the mouse does not alwayse use max speed? make a rolling average over the last few velocities?
 
             for _ in range(iterations):
                 new_x += np.cos(new_orientation) * speed * dt

@@ -6,11 +6,11 @@ costmap:
   #robot_radius: 0.105
 
   observation_sources: scan
-  scan: {sensor_frame: cat/base_scan, data_type: LaserScan, topic: cat/scan, marking: true, clearing: true}
+  scan: {sensor_frame: cat/base_scan, data_type: LaserScan, topic: cat/scan, marking: true, clearing: false}
   
   always_send_full_costmap: false
 
-  obstacle_range: 3.0
+  obstacle_range: 3.5
   raytrace_range: 3.5
 
   update_frequency: 5.0
@@ -18,14 +18,14 @@ costmap:
   transform_tolerance: 0.5
 
   rolling_window: true
-  width: 20.0
-  height: 20.0
+  width: 100.0
+  height: 100.0
   resolution: 0.05
-  origin_x: -10.0
-  origin_y: -10.0
+  origin_x: -50.0
+  origin_y: -50.0
 
-  inflation_radius: 0.5
-  cost_scaling_factor: 1.5
+  inflation_radius: 0.45
+  cost_scaling_factor: 15.0
 
   # plugins:
   #   - {name: obstacle_layer, type: "costmap_2d::ObstacleLayer"}

@@ -1,14 +1,12 @@
-from abstract_behaviour import AbstractBehaviour
-from animal_types import AnimalPosAndOrientation, AnimalProperties
+from helper_types import AnimalPosAndOrientation, AnimalProperties
 
 import numpy as np
 
-class FreeSpaceBehaviour(AbstractBehaviour):
-    # added to try behaviour gates
+class FreeSpaceBehaviour():
     def __init__(self, animal_properties: AnimalProperties):
         self.animal_properties = animal_properties
 
-    def get_velocity_and_omega(self, own_pos: AnimalPosAndOrientation, other_pos: AnimalPosAndOrientation, scan: tuple, enemy_capabilities: AnimalProperties):
+    def get_velocity_and_omega(self, scan: tuple):
         ranges = scan[0]
         angles = scan[1]
         return self.animal_properties.max_linear_vel, self.__free_space(ranges, angles)        

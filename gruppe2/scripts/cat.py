@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
 from mouse_tracker import MouseTracker
-from animal_types import AnimalPosAndOrientation
+from helper_types import AnimalProperties, AnimalPosAndOrientation
 import sys
 import os
 
 from all_behaviours import get_all_behaviours
-from animal_types import AnimalProperties
 
 import rospy
 from nav_msgs.msg import Odometry
@@ -23,9 +22,6 @@ assert len(sys.argv) >= 6
 
 class Cat:
     def __init__(self, self_cmd_vel_topic, self_odom_topic, self_scan, enemy_odom_topic, Behaviour) -> None:
-
-        # TODO: weiß nicht, ob wir das brauchen
-        # rospy.Subscriber("game_state", Int32, lambda game_state: self.__game_state_callback(game_state))
 
         # Cheese
         self.cheese_pos = self.__get_cheese_pos()
@@ -102,11 +98,11 @@ class Cat:
             if not self.self_odom_callback_received or not self.enemy_odom_callback_received or not self.scan_callback_received:
                 continue
 
-            velocity, angle = self.behavior.get_velocity_and_omega(self.self_pos, self.mouse_tracker.get_mouse_position_and_orientation(), self.scan, self.mouse_tracker.get_mouse_capabilities())
+            velocity, angle = self.behavior.get_velocity_and_omega(self.self_pos, self.mouse_tracker, self.scan)
 
             out = Twist()
-            out.linear.x = velocity
-            out.angular.z = angle
+            out.linear.x = np.clip(velocity, 0.2, self.properties.max_linear_vel)
+            out.angular.z = np.clip(angle, -self.properties.max_omega, self.properties.max_omega)
 
             self.cmd_vel_pub.publish(out)
 
@@ -116,7 +112,7 @@ if __name__ == '__main__':
     self_odom_topic = sys.argv[2]
     self_scan = sys.argv[3]
     enemy_odom_topic = sys.argv[4]
-    behaviour_to_use = 'minimax' #sys.argv[5] # behaviour does only need to change for testing, so setting it here in the script directly is easier
+    behaviour_to_use = 'combined' #sys.argv[5] # behaviour does only need to change for testing, so setting it here in the script directly is easier
 
     try:
         rospy.init_node('cat')
