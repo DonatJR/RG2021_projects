@@ -1,7 +1,7 @@
 from math import pi
 from minimax_behaviour import MinimaxBehaviour
 from mouse_tracker import MouseTracker
-from follow_plan_behaviour import FollowPlanBehaviour
+from follow_plan_ca_combined_behaviour import CombineFollowPlanCaBehaviour
 from minimax_ca_combined_behaviour import CombineMinimaxCaBehaviour
 from recovery_behaviours import RecoveryBehaviours
 from helper_types import AnimalProperties, PosAndOrientation, get_angle_between_positions, get_distance_between_positions
@@ -13,7 +13,7 @@ class CombinedBehaviours():
     def __init__(self, animal_properties: AnimalProperties):
         self.minimax_behaviour = MinimaxBehaviour(animal_properties)
         self.minimax_ca_behaviour = CombineMinimaxCaBehaviour(animal_properties)
-        self.follow_plan_behaviour = FollowPlanBehaviour(animal_properties)
+        self.follow_plan_ca_behaviour = CombineFollowPlanCaBehaviour(animal_properties)
         # self.recovery_behaviour = RecoveryBehaviours(animal_properties)
 
     def get_velocity_and_omega(self, own_pos: PosAndOrientation, mouse_tracker: MouseTracker, scan: tuple):
@@ -27,7 +27,7 @@ class CombinedBehaviours():
         elif self.__is_mouse_close_and_visible(own_pos, other_pos, scan):
             return self.minimax_ca_behaviour.get_velocity_and_omega(own_pos, mouse_tracker, scan)
         else:
-            return self.follow_plan_behaviour.get_velocity_and_omega(own_pos, other_pos, scan)
+            return self.follow_plan_ca_behaviour.get_velocity_and_omega(own_pos, other_pos, scan)
 
     def __is_mouse_very_close_and_visible(self, own_pos, other_pos, scan):
         distance = get_distance_between_positions(own_pos.pos, other_pos.pos)
