@@ -5,8 +5,9 @@ from follow_plan_ca_combined_behaviour import CombineFollowPlanCaBehaviour
 from minimax_behaviour import MinimaxBehaviour
 from minimax_ca_combined_behaviour import CombineMinimaxCaBehaviour
 
+
 def get_all_behaviours():
-    return { 
+    return {
         'collision_avoidance': CollisionAvoidanceBehaviour,
         'follow_plan': FollowPlanBehaviour,
         'follow_plan_ca': CombineFollowPlanCaBehaviour,

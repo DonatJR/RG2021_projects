@@ -8,12 +8,16 @@ from helper_types import AnimalProperties, PosAndOrientation, get_angle_between_
 
 import numpy as np
 
+
 class CombinedBehaviours():
     """Switches between and selects the best behaviour to use depending on the game state / current situation"""
+
     def __init__(self, animal_properties: AnimalProperties):
         self.minimax_behaviour = MinimaxBehaviour(animal_properties)
-        self.minimax_ca_behaviour = CombineMinimaxCaBehaviour(animal_properties)
-        self.follow_plan_ca_behaviour = CombineFollowPlanCaBehaviour(animal_properties)
+        self.minimax_ca_behaviour = CombineMinimaxCaBehaviour(
+            animal_properties)
+        self.follow_plan_ca_behaviour = CombineFollowPlanCaBehaviour(
+            animal_properties)
         # self.recovery_behaviour = RecoveryBehaviours(animal_properties)
 
     def get_velocity_and_omega(self, own_pos: PosAndOrientation, mouse_tracker: MouseTracker, scan: tuple):
@@ -27,13 +31,13 @@ class CombinedBehaviours():
         elif self.__is_mouse_close_and_visible(own_pos, other_pos, scan):
             return self.minimax_ca_behaviour.get_velocity_and_omega(own_pos, mouse_tracker, scan)
         else:
-            follow_plan_velocity, follow_plan_omega = self.follow_plan_ca_behaviour.get_velocity_and_omega(own_pos, other_pos, scan)
+            follow_plan_velocity, follow_plan_omega = self.follow_plan_ca_behaviour.get_velocity_and_omega(
+                own_pos, other_pos, scan)
             if follow_plan_omega is not None:
                 return follow_plan_velocity, follow_plan_omega
-            
+
             # if the planner service dies, use fallback to minimax with ca, not ideal but better than nothing :/
             return self.minimax_ca_behaviour.get_velocity_and_omega(own_pos, mouse_tracker, scan)
-    
 
     def __is_mouse_too_close_for_plan(self, own_pos, other_pos):
         distance = get_distance_between_positions(own_pos.pos, other_pos.pos)
@@ -48,24 +52,30 @@ class CombinedBehaviours():
         return distance < 1.5 and self.__is_other_robot_visible(own_pos, other_pos, scan, distance)
 
     def __is_other_robot_visible(self, own_pos, other_pos, scan, distance):
-        scan_pointing_to_other_robot = self.__find_scan_pointing_to_other_robot(own_pos, other_pos, scan[1])
+        scan_pointing_to_other_robot = self.__find_scan_pointing_to_other_robot(
+            own_pos, other_pos, scan[1])
         scan_distance_to_other_robot = scan[0][scan_pointing_to_other_robot]
         distance_tolerance = 0.08
 
-        other_robot_visible = np.abs(scan_distance_to_other_robot - distance) < distance_tolerance # if real distance and distance of laser are close to each other, there can be no obstacle between them
+        # if real distance and distance of laser are close to each other, there can be no obstacle between them
+        other_robot_visible = np.abs(
+            scan_distance_to_other_robot - distance) < distance_tolerance
 
         # also try previous and next scan
         if not other_robot_visible:
             previous_scan = scan_pointing_to_other_robot - 1
-            previous_scan = previous_scan if previous_scan >= 0 else len(scan[0])-1
+            previous_scan = previous_scan if previous_scan >= 0 else len(
+                scan[0])-1
 
-            other_robot_visible = other_robot_visible or np.abs(scan[0][previous_scan] - distance) < 0.1
+            other_robot_visible = other_robot_visible or np.abs(
+                scan[0][previous_scan] - distance) < 0.1
 
         if not other_robot_visible:
             next_scan = scan_pointing_to_other_robot + 1
             next_scan = next_scan if next_scan < len(scan[0]-1) else 0
 
-            other_robot_visible = other_robot_visible or np.abs(scan[0][next_scan] - distance) < 0.1
+            other_robot_visible = other_robot_visible or np.abs(
+                scan[0][next_scan] - distance) < 0.1
 
         return other_robot_visible
 

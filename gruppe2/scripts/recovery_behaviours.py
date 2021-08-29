@@ -3,10 +3,12 @@
 from helper_types import AnimalProperties
 import inspect
 
+
 class RecoveryBehaviours():
     def __init__(self, animal_properties: AnimalProperties):
         self.animal_properties = animal_properties
 
     def get_velocity_and_omega(self):
-        raise NotImplementedError(f"{inspect.stack()[0][3]} is not implemented yet")
+        raise NotImplementedError(
+            f"{inspect.stack()[0][3]} is not implemented yet")
         # return self.animal_properties.max_linear_vel, 0

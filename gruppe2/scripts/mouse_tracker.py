@@ -2,9 +2,12 @@ from helper_types import PosAndOrientation, AnimalProperties, Positition2D, get_
 
 import numpy as np
 
-# keeps track of what the mouse can do, currently only its max velocity and max turning angle (omega) 
+# keeps track of what the mouse can do, currently only its max velocity and max turning angle (omega)
+
+
 class MouseTracker():
     """Keeps track of mouse capabilities and properties"""
+
     def __init__(self, cheese_pos) -> None:
         self.mouse_properties = AnimalProperties(0, 0)
         self.last_five_velocities = np.zeros(5)
@@ -24,7 +27,7 @@ class MouseTracker():
 
     def update_position_and_orientation(self, pos_and_orientation: PosAndOrientation):
         self.mouse_pos = pos_and_orientation
-        
+
         # find cheese target
         min_dist = np.inf
         min_dist_idx = 0
@@ -34,8 +37,8 @@ class MouseTracker():
 
         # TODO future: maybe get other nearby cheese positions and decide based on viewing angle??
 
-        self.cheese_target = Positition2D(self.cheese_pos[min_dist_idx][0], self.cheese_pos[min_dist_idx][1])
-            
+        self.cheese_target = Positition2D(
+            self.cheese_pos[min_dist_idx][0], self.cheese_pos[min_dist_idx][1])
 
     def get_mouse_capabilities(self) -> AnimalProperties:
         return self.mouse_properties
