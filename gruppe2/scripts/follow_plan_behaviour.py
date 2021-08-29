@@ -3,35 +3,42 @@ from helper_types import AnimalProperties, PosAndOrientation, get_distance_betwe
 from nav_msgs.srv import GetPlan, GetPlanRequest, GetPlanResponse
 from nav_msgs.msg import Path
 from geometry_msgs.msg import PoseStamped
+from rospy.exceptions import ROSException
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 import numpy as np
+import os
 
 class FollowPlanBehaviour():
     """Calculates a plan with navigation/global_planner from current cat position to the mouse and gives cmd_vel properties to follow the generated path"""
     def __init__(self, animal_properties: AnimalProperties):
         self.animal_properties = animal_properties
-        service_name = "/cat_planner/planner/make_plan" # should the service name be configurable?
-
-        rospy.wait_for_service(service_name)
-        self.get_plan_proxy = rospy.ServiceProxy(service_name, GetPlan)
+        self.planner_service_name = "/cat_planner/planner/make_plan" # should the service name be configurable?
 
         self.last_plan_own_pos = None
         self.last_plan_other_pos = None
         self.first_plan_time = None
         self.beginning_plan_regenerated = False
-        self.pos_tolerance = 0.5 # TODO make smaller
+        self.pos_tolerance = 0.4
         self.path_driven = []
         self.goal_pub = rospy.Publisher("/cat_goal", PoseStamped, queue_size=10)
         self.cat_to_goal_pub = rospy.Publisher("/cat_to_goal", PoseStamped, queue_size=10)
+        self.current_goal = None
+        self.generator = None
 
     
     def get_velocity_and_omega(self, own_pos: PosAndOrientation, other_pos: PosAndOrientation, scan: tuple):
-        if self.__new_plan_needed(own_pos, other_pos, scan[0]):
+        if self.__new_plan_needed(own_pos, other_pos, scan):
             plan = self.__generate_plan(own_pos, other_pos)
-            self.generator = self.__velocity_and_orientation_generator(plan)
+            
+            if plan is None or len(plan.poses) == 0:
+                self.generator = None
+            else:
+                self.generator = self.__velocity_and_orientation_generator(plan)
             self.path_driven = []
 
-        
+        if self.generator is None:
+            return None, None
+
         self.path_driven += [own_pos]
         return next(self.generator)
 
@@ -76,12 +83,26 @@ class FollowPlanBehaviour():
 
             # this should throw an exception on error, but sadly it does not if no plan can be found (even though the service itself logs an error)
             response: GetPlanResponse = self.get_plan_proxy(request)
+
             return response.plan
 
-        plan = request_plan(own_pos, other_pos)
+        # wait for service to be available, if it is not yet ready just use fallback
+        try:
+            rospy.wait_for_service(self.planner_service_name, 0.05)
+            # sometimes the planner just dies :( try restarting it once
+            try:
+                self.get_plan_proxy = rospy.ServiceProxy(self.planner_service_name, GetPlan, persistent=False)
+                plan = request_plan(own_pos, other_pos)
+            except rospy.service.ServiceException:
+                print("Encountered an error while making plan, waiting for respawn")
+                plan = None
+        except ROSException:
+            plan = None
+     
 
         if self.first_plan_time is None:
             self.first_plan_time = rospy.Time.now()
+
         self.last_plan_own_pos = own_pos
         self.last_plan_other_pos = other_pos
         return plan
@@ -94,21 +115,24 @@ class FollowPlanBehaviour():
                 yield 0, 0 # TODO future: yield None instead and generate a new plan if this is the case?
             else:
                 goal_pos = self.__get_pos_from_pose_stamed(plan.poses[pose_index])
-                future_index = pose_index
-                nearest_dist = np.inf
+                last_own_pos = self.path_driven[len(self.path_driven)-1]
 
+                # TODO future: this needs a visibility check if we want to use it
                 # find the nearest pos to robot
                 # alternatively, if a far future point in path is nearer to robot than the current pos
                 # it might be a good idea to generate a new path?
-                last_own_pos = self.path_driven[len(self.path_driven)-1]
-                while future_index < len(plan.poses):
-                    future_index_pos = self.__get_pos_from_pose_stamed(plan.poses[future_index])
-                    future_dist = get_distance_between_positions(last_own_pos.pos, future_index_pos.pos)
-                    if future_dist < nearest_dist:
-                        nearest_dist = future_dist
-                        pose_index = future_index
 
-                    future_index += 1
+                # future_index = pose_index
+                # nearest_dist = np.inf
+              
+                # while future_index < len(plan.poses):
+                #     future_index_pos = self.__get_pos_from_pose_stamed(plan.poses[future_index])
+                #     future_dist = get_distance_between_positions(last_own_pos.pos, future_index_pos.pos)
+                #     if future_dist < nearest_dist:
+                #         nearest_dist = future_dist
+                #         pose_index = future_index
+
+                #     future_index += 1
 
 
                 # find the next pose not inside the tolerance radius of the driven path up until now
@@ -139,7 +163,8 @@ class FollowPlanBehaviour():
                 except Exception as ecx:
                     print(ecx)
 
-
+                self.current_goal = goal_pos
+                self.current_angle_to_turn = angle_to_turn
                 yield self.animal_properties.max_linear_vel, angle_to_turn
 
 
@@ -160,13 +185,16 @@ class FollowPlanBehaviour():
         return PosAndOrientation(pose_stamped.pose.position.x, pose_stamped.pose.position.y, orientation)
 
 
-    def __new_plan_needed(self, own_pos, other_pos, ranges):
+    def __new_plan_needed(self, own_pos, other_pos, scan):
+        if self.generator is None:
+            return True
+
         # no plan was generated yet
         if self.last_plan_own_pos is None or self.last_plan_other_pos is None:
             return True
 
-        # the first plan can sometimes not have much costmap data available, generate a new one after a quarter second
-        if not self.beginning_plan_regenerated and (self.first_plan_time is not None and (rospy.Time.now() - self.first_plan_time).to_sec() > 0.25):
+        # the first plan can sometimes not have much costmap data available, generate a new one after half a second
+        if not self.beginning_plan_regenerated and (self.first_plan_time is not None and (rospy.Time.now() - self.first_plan_time).to_sec() > 0.5):
             self.beginning_plan_regenerated = True
             return True
 
@@ -177,5 +205,23 @@ class FollowPlanBehaviour():
         # or we have moved some distance
         if get_distance_between_positions(self.last_plan_own_pos.pos, own_pos.pos) > 2:
             return True
+        
+        # check if goal is obstructed
+        if self.current_goal is not None:
+            angle_to_turn = self.current_angle_to_turn
+            if angle_to_turn < 0:
+                angle_to_turn += 2*np.pi
+
+            smallest_diff = np.inf
+            for idx, angle in enumerate(scan[1]):
+                new_diff = np.abs(angle - angle_to_turn)
+                if new_diff < smallest_diff:
+                    smallest_diff = new_diff
+                    best_idx = idx
+
+            distance_to_laser_obstacle = scan[0][best_idx]
+            distance_to_goal = get_distance_between_positions(own_pos.pos, self.current_goal.pos)
+            if distance_to_laser_obstacle < distance_to_goal - 0.2:
+                return True
 
         return False

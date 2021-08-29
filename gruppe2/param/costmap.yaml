@@ -6,25 +6,23 @@ costmap:
   #robot_radius: 0.105
 
   observation_sources: scan
-  scan: {sensor_frame: cat/base_scan, data_type: LaserScan, topic: cat/scan, marking: true, clearing: false}
+  scan: {sensor_frame: cat/base_scan, data_type: LaserScan, topic: cat/scan, clearing: True, marking: True }
   
-  always_send_full_costmap: false
+  always_send_full_costmap: False
 
-  obstacle_range: 3.5
+  obstacle_range: 3.45
   raytrace_range: 3.5
 
-  update_frequency: 5.0
+  update_frequency: 4.5
   publish_frequency: 5.0
   transform_tolerance: 0.5
 
   rolling_window: true
-  width: 100.0
-  height: 100.0
+  width: 50.0
+  height: 50.0
   resolution: 0.05
-  origin_x: -50.0
-  origin_y: -50.0
 
-  inflation_radius: 0.55
+  inflation_radius: 0.625
   cost_scaling_factor: 12.0
 
   # plugins:
