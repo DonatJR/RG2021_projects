@@ -39,7 +39,7 @@ class CollisionAvoidanceBehaviour():
             force_y = np.sin(force_angles) * force
             force_y = np.sum(force_y)
             
-            c = 10 if self.small_fov else 1
+            c = 10 if self.small_fov else 3
             omega_max = 2.84
             
             omega = np.clip(force_y * c, -omega_max, omega_max)
