@@ -28,17 +28,20 @@ class MouseTracker():
     def update_position_and_orientation(self, pos_and_orientation: PosAndOrientation):
         self.mouse_pos = pos_and_orientation
 
-        # find cheese target
-        min_dist = np.inf
-        min_dist_idx = 0
-        for idx, cheese in enumerate(self.cheese_pos):
-            if get_distance_between_positions(self.mouse_pos.pos, Positition2D(cheese[0], cheese[1])) < min_dist:
-                min_dist_idx = idx
+        # find most likely cheese target
+        if self.cheese_pos is not None:
+            min_dist = np.inf
+            min_dist_idx = 0
+            for idx, cheese in enumerate(self.cheese_pos):
+                if get_distance_between_positions(self.mouse_pos.pos, Positition2D(cheese[0], cheese[1])) < min_dist:
+                    min_dist_idx = idx
 
-        # TODO future: maybe get other nearby cheese positions and decide based on viewing angle??
+            # TODO future: maybe get other nearby cheese positions and decide based on viewing angle??
 
-        self.cheese_target = Positition2D(
-            self.cheese_pos[min_dist_idx][0], self.cheese_pos[min_dist_idx][1])
+            self.cheese_target = Positition2D(
+                self.cheese_pos[min_dist_idx][0], self.cheese_pos[min_dist_idx][1])
+        else:
+            self.cheese_target = None
 
     def get_mouse_capabilities(self) -> AnimalProperties:
         return self.mouse_properties

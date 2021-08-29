@@ -87,9 +87,11 @@ class MinimaxBehaviour():
         # normalize angle
         angle = np.abs(angle / 180)
 
-        # distance between mouse and cheese, big distance is better
-        mouse_cheese_distance = get_distance_between_positions(
-            other_pos.pos, cheese_target)
+        # distance between mouse and cheese, big distance is better for cat (if we do not have cheese position, just ignore this)
+        mouse_cheese_distance = 0
+        if cheese_target is not None:
+            mouse_cheese_distance = get_distance_between_positions(
+                other_pos.pos, cheese_target)
 
         # emphasize distance and a good angle and weight it based on the fact if other animal (mouse) is behind or in front of ourselves (cat)
         # return np.abs(180 - angle)/-180

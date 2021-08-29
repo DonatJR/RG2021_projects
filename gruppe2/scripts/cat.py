@@ -53,6 +53,11 @@ class Cat:
         rospack = rospkg.RosPack()
         catch_path = rospack.get_path('catch')
         cheese_positions = []
+
+        # if cheese files do not exist do not use them
+        if os.path.isfile(os.path.join(catch_path, 'maps/cheese_' + str(1) + '.npy')):
+            return None
+
         # as both map 1 and map 2 setup nodes are initialized as rogata_engine, we have to get creative to find the relevant cheese
         # test if the first cheese middle point is inside of cheese object, if yes we are dealing with map 1, else with map 2
         cheese_1_middle = np.mean(np.load(os.path.join(
