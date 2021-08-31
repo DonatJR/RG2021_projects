@@ -95,7 +95,7 @@ class FollowPlanBehaviour():
         # wait for service to be available, if it is not yet ready just use fallback
         try:
             rospy.wait_for_service(self.planner_service_name, 0.05)
-            # sometimes the planner just dies :( try restarting it once
+            # sometimes the planner just dies :( wait until it is restarted
             try:
                 self.get_plan_proxy = rospy.ServiceProxy(
                     self.planner_service_name, GetPlan, persistent=False)
