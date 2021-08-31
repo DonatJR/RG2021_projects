@@ -95,7 +95,7 @@ class MinimaxBehaviour():
 
         # emphasize distance and a good angle and weight it based on the fact if other animal (mouse) is behind or in front of ourselves (cat)
         # return np.abs(180 - angle)/-180
-        return distance_weight * distance + angle_weight * angle + mouse_cheese_distance
+        return distance_weight * distance + angle_weight * angle - mouse_cheese_distance
 
     def _mouse_metric(self, own_pos, other_pos, cheese_target: Positition2D):
         # it could be (i.e. it is pretty much given) that the mouse uses another system than we are,
